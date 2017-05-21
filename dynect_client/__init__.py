@@ -1,1 +1,1 @@
-from client import DynectDNSClient
+from .client import DynectDNSClient

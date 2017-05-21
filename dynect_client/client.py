@@ -1,5 +1,5 @@
 import json
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import threading
 
 
@@ -35,13 +35,13 @@ class DynectDNSClient:
           record = self._request(url.replace('/REST/', ''), None)
           if record and isinstance(record.get('data'), dict):
             record['record'] = record['data']['fqdn']
-            record['value'] = record['data']['rdata'].values()[0]
+            record['value'] = list(record['data']['rdata'].values())[0]
             record['type'] = record['data']['record_type']
             record['ttl'] = record['data']['ttl']
             record['url'] = url
             records.append(record)
       return records
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
       if e.code == 404:
         return None
       else:
@@ -143,14 +143,14 @@ class DynectDNSClient:
 
     self.lock.acquire()
     try:
-      resp = urllib2.urlopen(req)
+      resp = urllib.request.urlopen(req)
       self.lock.release()
       if type:
         return resp
       else:
         return json.loads(resp.read())
 
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
       self.lock.release()
       if e.code == 400:
         self._login()
@@ -158,19 +158,19 @@ class DynectDNSClient:
       else:
         self.errors.append(e)
         return None
-    except Exception, err:
+    except Exception as err:
       self.lock.release()
       import traceback
       self.errors.append(traceback.format_exc())
       return None
 
 
-class MethodRequest(urllib2.Request):
+class MethodRequest(urllib.request.Request):
   def __init__(self, *args, **kwargs):
-    urllib2.Request.__init__(self, *args, **kwargs)
+    urllib.request.Request.__init__(self, *args, **kwargs)
     self.method = None
 
   def get_method(self):
     if self.method:
       return self.method
-    return urllib2.Request.get_method(self)
+    return urllib.request.Request.get_method(self)
